@@ -11,10 +11,16 @@ class VariablesProvider(typing.Protocol):
 
     @classmethod
     def option_name(cls) -> str:
+        """
+        Provider's option name in the `options` kwargs of the variable reader
+        """
         ...
 
 
 class EnvVariablesProvider:
+    """
+    Simple provider to read variables from environment
+    """
     def __init__(self, *args, **kwargs):
         pass
 
@@ -29,6 +35,10 @@ class EnvVariablesProvider:
 
 
 class EnvFileProvider:
+    """
+    Reads variables from env file;
+    The provider is lazy - it reads entire file on the first call and caches it
+    """
     def __init__(self, *args, options: typing.Dict, **kwargs):
         self.path = options.get('path', '.env')
         self.values = {}
@@ -72,10 +82,10 @@ class VariableReader:
         EnvFileProvider,
     )
 
-    def __init__(self, **options):
+    def __init__(self, providers: typing.Tuple[VariablesProvider] = tuple(), **options):
         self.providers: typing.List[VariablesProvider] = []
 
-        for provider in self.default_providers:
+        for provider in (providers or self.default_providers):
             self.providers.append(
                 provider(options=options.get(provider.option_name(), {}))
             )
